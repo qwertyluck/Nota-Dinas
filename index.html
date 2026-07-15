@@ -3,41 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generator Nota Dinas Presisi V4</title>
-    <!-- Bootstrap untuk Tampilan Form -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Generator Nota Dinas Super Presisi</title>
     
-    <!-- Pustaka docx.js versi UMD -->
-    <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
-    <!-- Library FileSaver untuk Download File -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <!-- PERBAIKAN SOLUSI 5: Menggunakan Link Lokal agar Mandiri & Bisa Offline -->
+    <!-- Jika belum diunduh ke lokal, sistem otomatis mencoba fallback ke CDN internet -->
+    <link href="bootstrap.min.css" rel="stylesheet" onerror="this.onerror=null; this.href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css';">
+    <script src="docx.umd.min.js" onerror="this.onerror=null; this.src='https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js';"></script>
+    <script src="FileSaver.min.js" onerror="this.onerror=null; this.src='https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js';"></script>
     
     <style>
-        body { background-color: #f8f9fa; padding: 30px 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .card { box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: none; border-radius: 10px; }
+        body { background-color: #f4f6f9; padding: 30px 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card { box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: none; border-radius: 12px; }
         .header-title { border-bottom: 3px solid #198754; padding-bottom: 15px; margin-bottom: 25px; }
-        .form-label { font-size: 0.9rem; color: #495057; }
+        .section-divider { border-top: 2px dashed #dee2e6; margin: 25px 0; padding-top: 15px; }
+        .bas-container { max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; padding: 10px; border-radius: 6px; background-color: #fff; }
+        .tembusan-item { display: flex; gap: 10px; margin-bottom: 8px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-8">
+        <div class="col-md-9">
             <div class="card p-4 mb-5">
                 <div class="header-title text-center">
                     <h3 class="text-success fw-bold mb-1">KEJAKSAAN NEGERI MALUKU TENGGARA</h3>
-                    <p class="text-muted small mb-0">Generator Nota Dinas Otomatis (Input Kalender Interaktif)</p>
+                    <p class="text-muted small mb-0">Sistem Aplikasi Generator Dokumen Nota Dinas Otomatis</p>
                 </div>
 
                 <form id="notaForm">
+                    <!-- BLOCK 1: ADMINISTRASI SURAT -->
+                    <h5 class="text-success fw-bold">1. Administrasi Nota Dinas</h5>
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Nomor ND (Angka saja)</label>
                             <input type="text" id="nomorNd" class="form-control" placeholder="Contoh: 123" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Bulan ND (Otomatis dari Kalender)</label>
+                            <label class="form-label fw-bold">Bulan ND (Otomatis)</label>
                             <input type="text" id="bulanNd" class="form-control" readonly style="background-color: #e9ecef;">
                         </div>
                         <div class="col-md-6">
@@ -48,18 +51,16 @@
                             <label class="form-label fw-bold">Dari</label>
                             <input type="text" id="dari" class="form-control" value="Kuasa Pengguna Anggaran" required>
                         </div>
-                        <div class="col-md-12">
-                            <label class="form-label fw-bold">Pilih Tanggal Nota Dinas (Klik Ikon Kalender)</label>
-                            <!-- Input bertipe date untuk memunculkan kalender pop-up -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Pilih Tanggal Nota Dinas</label>
                             <input type="date" id="tanggalKalender" class="form-control" onchange="updateFormatTanggal()" required>
-                            <!-- Input tersembunyi/penyimpanan hasil konversi teks Indonesia -->
                             <input type="hidden" id="tanggalTeks">
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <label class="form-label fw-bold">Sifat</label>
                             <input type="text" id="sifat" class="form-control" value="Biasa" required>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <label class="form-label fw-bold">Lampiran</label>
                             <input type="text" id="lampiran" class="form-control" value="-" required>
                         </div>
@@ -67,9 +68,15 @@
                             <label class="form-label fw-bold">Perihal</label>
                             <input type="text" id="perihal" class="form-control" value="Nota Dinas Pencairan Anggaran" required>
                         </div>
+                    </div>
+
+                    <!-- BLOCK 2: DETAIL ANGGARAN & DIPA (SOLUSI 3 DARI EXCEL) -->
+                    <div class="section-divider"></div>
+                    <h5 class="text-success fw-bold">2. Anggaran & Pilihan Mata Anggaran (BAS)</h5>
+                    <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label fw-bold">Detail Kegiatan (Sehubungan dengan...)</label>
-                            <textarea id="kegiatan" class="form-control" rows="3" required>kegiatan operasional sehari-hari</textarea>
+                            <textarea id="kegiatan" class="form-control" rows="2" required>kegiatan operasional sehari-hari</textarea>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Nominal Anggaran (Rp)</label>
@@ -79,12 +86,63 @@
                             <label class="form-label fw-bold">DIPA Tahun</label>
                             <input type="text" id="dipaTahun" class="form-control" value="2024" required>
                         </div>
+                        
+                        <!-- INTEGRASI MAP EXCEL: Memilih kode akun Belanja Barang 52xxxx -->
                         <div class="col-12">
-                            <label class="form-label fw-bold">Nomor Mata Anggaran</label>
-                            <input type="text" id="mataAnggaran" class="form-control" value="521211 dan 524113" required>
+                            <label class="form-label fw-bold">Pilih Nomor Mata Anggaran (Bisa pilih lebih dari satu sesuai BAS K/L):</label>
+                            <div class="bas-container" id="basContainer">
+                                <!-- Pilihan dihasilkan otomatis via JavaScript di bawah -->
+                            </div>
                         </div>
                     </div>
 
+                    <!-- BLOCK 3: PEJABAT PENANDATANGAN (SOLUSI 2 DROPDOWN) -->
+                    <div class="section-divider"></div>
+                    <h5 class="text-success fw-bold">3. Pejabat Penandatangan</h5>
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Pilih Profil Pejabat</label>
+                            <select id="pejabatSelect" class="form-select" onchange="loadProfilPejabat()">
+                                <option value="fadjar">Dr. Fadjar - Kuasa Pengguna Anggaran</option>
+                                <option value="plt_kpa">Plt. Kuasa Pengguna Anggaran</option>
+                                <option value="ppk_pembinaan">Pejabat Pembuat Komitmen (PPK)</option>
+                                <option value="custom">-- Input Manual Pejabat Baru --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Jabatan Struktur</label>
+                            <input type="text" id="pjbJabatan" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Nama Pejabat</label>
+                            <input type="text" id="pjbNama" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Pangkat / Golongan</label>
+                            <input type="text" id="pjbPangkat" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <!-- BLOCK 4: TEMBUSAN DINAMIS (SOLUSI 4) -->
+                    <div class="section-divider"></div>
+                    <h5 class="text-success fw-bold">4. Bagian Tembusan Surat</h5>
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Daftar Tembusan Yth:</label>
+                        <div id="tembusanContainer">
+                            <!-- Baris awal tembusan standar -->
+                            <div class="tembusan-item">
+                                <input type="text" class="form-control tembusan-input" value="Pejabat Pembuat Komitmen;" required>
+                                <button type="button" class="btn btn-danger btn-sm" onclick="hapusBarisTembusan(this)">Hapus</button>
+                            </div>
+                            <div class="tembusan-item">
+                                <input type="text" class="form-control tembusan-input" value="A r s i p .-" required>
+                                <button type="button" class="btn btn-danger btn-sm" onclick="hapusBarisTembusan(this)">Hapus</button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm mt-2" onclick="tambahBarisTembusan()">➕ Tambah Baris Tembusan</button>
+                    </div>
+
+                    <!-- BUTTON GENERATE -->
                     <div class="d-grid gap-2 mt-4">
                         <button type="button" onclick="generateWord()" class="btn btn-success btn-lg fw-bold">📥 Download Nota Dinas Sesuai Softfile (.docx)</button>
                     </div>
@@ -95,48 +153,111 @@
 </div>
 
 <script>
-// Fungsi yang berjalan otomatis saat halaman pertama kali dibuka
+// Data master akun belanja berdasarkan data file Excel BAS yang Anda upload
+const dataAkunBAS = [
+    { kode: "521111", nama: "Belanja Keperluan Perkantoran" },
+    { kode: "521115", nama: "Belanja Honorarium Output Kegiatan" },
+    { kode: "521119", nama: "Belanja Barang Operasional Lainnya" },
+    { kode: "521121", nama: "Belanja Langganan Daya dan Jasa" },
+    { kode: "521128", nama: "Belanja Jasa Satpam, Pengemudi, Petugas Kebersihan, dan Pramubakti" },
+    { kode: "521211", nama: "Belanja Bahan" },
+    { kode: "521213", nama: "Belanja Honorarium Output Non-Kegiatan" },
+    { kode: "521219", nama: "Belanja Barang Non-Operasional Lainnya" },
+    { kode: "522111", nama: "Belanja Jasa Profesi" },
+    { kode: "522112", nama: "Belanja Jasa Publikasi/Iklan" },
+    { kode: "522114", nama: "Belanja Jasa Sewa" },
+    { kode: "522115", nama: "Belanja Jasa Konsultan" },
+    { kode: "523111", nama: "Belanja Pemeliharaan Gedung dan Bangunan" },
+    { kode: "523121", nama: "Belanja Pemeliharaan Peralatan dan Mesin" },
+    { kode: "523131", nama: "Belanja Pemeliharaan Jalan, Irigasi, dan Jaringan" },
+    { kode: "524111", nama: "Belanja Perjalanan Dinas Biasa Dalam Negeri" },
+    { kode: "524113", nama: "Belanja Perjalanan Dinas Dalam Kota" },
+    { kode: "524114", nama: "Belanja Perjalanan Dinas Paket Meeting Dalam Kota" },
+    { kode: "524119", nama: "Belanja Perjalanan Dinas Paket Meeting Luar Kota" }
+];
+
+// Data master profil pejabat (Solusi 2)
+const masterPejabat = {
+    fadjar: { jabatan: "Kuasa Pengguna Anggaran", nama: "Dr. Fadjar", pangkat: "Jaksa Utama Pratama" },
+    plt_kpa: { jabatan: "Plt. Kuasa Pengguna Anggaran", nama: "Nama Pejabat Plt", pangkat: "Jaksa Madya" },
+    ppk_pembinaan: { jabatan: "Pejabat Pembuat Komitmen", nama: "Nama Pejabat PPK", pangkat: "Jaksa Muda" },
+    custom: { jabatan: "", nama: "", pangkat: "" }
+};
+
+// Fungsi inisialisasi aplikasi saat halaman selesai dimuat
 document.addEventListener("DOMContentLoaded", function() {
+    // 1. Setup Tanggal Hari Ini
     const hariIni = new Date();
-    
-    // Format YYYY-MM-DD agar bisa diterima oleh input type="date"
     const tahun = hariIni.getFullYear();
     const bulan = String(hariIni.getMonth() + 1).padStart(2, '0');
     const tanggal = String(hariIni.getDate()).padStart(2, '0');
-    
-    // Set tanggal kalender ke hari ini secara otomatis
-    const inputKalender = document.getElementById("tanggalKalender");
-    inputKalender.value = `${tahun}-${bulan}-${tanggal}`;
-    
-    // Jalankan fungsi update agar text Indonesia dan Bulan ND langsung terisi otomatis
+    document.getElementById("tanggalKalender").value = `${tahun}-${bulan}-${tanggal}`;
     updateFormatTanggal();
+
+    // 2. Render List Checkbox Akun BAS dari Database Excel
+    const containerBAS = document.getElementById("basContainer");
+    dataAkunBAS.forEach(akun => {
+        const div = document.createElement("div");
+        div.className = "form-check";
+        
+        // Tandai default bawaan contoh 521211 dan 524113 agar langsung tercentang awal
+        const checkedStr = (akun.kode === "521211" || akun.kode === "524113") ? "checked" : "";
+        
+        div.innerHTML = `
+            <input class="form-check-input bas-checkbox" type="checkbox" value="${akun.kode}" id="bas_${akun.kode}" ${checkedStr}>
+            <label class="form-check-label" for="bas_${akun.kode}">
+                <strong>${akun.kode}</strong> - ${akun.nama}
+            </label>
+        `;
+        containerBAS.appendChild(div);
+    });
+
+    // 3. Load Pejabat Default
+    loadProfilPejabat();
 });
 
-// Fungsi untuk mengonversi pilihan kalender menjadi format teks Indonesia & update nomor bulan
+function loadProfilPejabat() {
+    const pilihan = document.getElementById("pejabatSelect").value;
+    const data = masterPejabat[pilihan];
+    
+    document.getElementById("pjbJabatan").value = data.jabatan;
+    document.getElementById("pjbNama").value = data.nama;
+    document.getElementById("pjbPangkat").value = data.pangkat;
+    
+    // Buka kunci input jika memilih input manual pejabat baru
+    const isCustom = pilihan === "custom";
+    document.getElementById("pjbJabatan").readOnly = !isCustom;
+    document.getElementById("pjbNama").readOnly = !isCustom;
+    document.getElementById("pjbPangkat").readOnly = !isCustom;
+}
+
 function updateFormatTanggal() {
     const nilaiKalender = document.getElementById("tanggalKalender").value;
     if (!nilaiKalender) return;
 
-    const bulanIndo = [
-        "Januari", "Februari", "Maret", "April", "Mei", "Juni", 
-        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-    ];
-
-    // Memecah string tanggal YYYY-MM-DD
+    const bulanIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     const parts = nilaiKalender.split("-");
-    const tahun = parts[0];
-    const indexBulan = parseInt(parts[1]) - 1;
-    const tanggal = parseInt(parts[2]);
-
-    // 1. Gabungkan menjadi teks tanggal Indonesia (Misal: 15 Juli 2026)
-    const teksIndonesia = `${tanggal} ${bulanIndo[indexBulan]} ${tahun}`;
-    document.getElementById("tanggalTeks").value = teksIndonesia;
-
-    // 2. Update otomatis Bulan ND dengan angka 2 digit (Misal: 07) sesuai pilihan kalender
+    
+    document.getElementById("tanggalTeks").value = `${parseInt(parts[2])} ${bulanIndo[parseInt(parts[1]) - 1]} ${parts[0]}`;
     document.getElementById("bulanNd").value = parts[1];
 }
 
-// Fungsi untuk mengubah Angka menjadi Terbilang Indonesia
+// Manajemen Baris Tembusan (Solusi 4)
+function tambahBarisTembusan() {
+    const container = document.getElementById("tembusanContainer");
+    const div = document.createElement("div");
+    div.className = "tembusan-item";
+    div.innerHTML = `
+        <input type="text" class="form-control tembusan-input" placeholder="Tembusan baru..." required>
+        <button type="button" class="btn btn-danger btn-sm" onclick="hapusBarisTembusan(this)">Hapus</button>
+    `;
+    container.appendChild(div);
+}
+
+function hapusBarisTembusan(btn) {
+    btn.parentElement.remove();
+}
+
 function terbilang(n) {
     const bilangan = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"];
     if (n < 12) return bilangan[n];
@@ -150,14 +271,15 @@ function terbilang(n) {
     return "Angka Terlalu Besar";
 }
 
-// Fungsi pembantu untuk mengambil file gambar logo lokal
 async function ambilGambarLogo(url) {
-    const respon = await fetch(url);
-    if (!respon.ok) {
-        throw new Error("Gagal memuat file logo-kejaksaan.png.");
+    try {
+        const respon = await fetch(url);
+        if (!respon.ok) throw new Error();
+        const blob = await respon.blob();
+        return await blob.arrayBuffer();
+    } catch {
+        throw new Error("Berkas 'logo-kejaksaan.png' tidak ditemukan.");
     }
-    const blob = await respon.blob();
-    return await blob.arrayBuffer();
 }
 
 async function generateWord() {
@@ -170,9 +292,22 @@ async function generateWord() {
         return;
     }
 
+    // Mengumpulkan daftar Kode Akun BAS terpilih (Solusi 3)
+    const checkboxes = document.querySelectorAll('.bas-checkbox:checked');
+    if (checkboxes.length === 0) {
+        alert("Mohon pilih minimal satu Nomor Mata Anggaran (BAS).");
+        return;
+    }
+    const arrayKodeBAS = Array.from(checkboxes).map(cb => cb.value);
+    const teksMataAnggaran = arrayKodeBAS.join(" dan ");
+
+    // Mengumpulkan Tembusan (Solusi 4)
+    const inputsTembusan = document.querySelectorAll('.tembusan-input');
+    const arrayTembusan = Array.from(inputsTembusan).map(inp => inp.value);
+
     const docxLib = window.docx;
     if (!docxLib) {
-        alert("Pustaka 'docx' gagal dimuat. Periksa koneksi internet.");
+        alert("Pustaka pembentuk berkas belum termuat sempurna.");
         return;
     }
 
@@ -182,7 +317,6 @@ async function generateWord() {
     try {
         const kepada = document.getElementById('kepada').value;
         const dari = document.getElementById('dari').value;
-        // Mengambil hasil konversi tanggal teks Indonesia
         const tanggal = document.getElementById('tanggalTeks').value;
         const sifat = document.getElementById('sifat').value;
         const lampiran = document.getElementById('lampiran').value;
@@ -192,7 +326,10 @@ async function generateWord() {
         const kegiatan = document.getElementById('kegiatan').value;
         const nominal = parseInt(document.getElementById('nominal').value) || 0;
         const dipaTahun = document.getElementById('dipaTahun').value;
-        const mataAnggaran = document.getElementById('mataAnggaran').value;
+        
+        const pjbJabatan = document.getElementById('pjbJabatan').value;
+        const pjbNama = document.getElementById('pjbNama').value;
+        const pjbPangkat = document.getElementById('pjbPangkat').value;
 
         const nominalFormat = new Intl.NumberFormat('id-ID').format(nominal);
         const teksTerbilang = terbilang(nominal) + " Rupiah";
@@ -203,28 +340,12 @@ async function generateWord() {
         const cellBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
         const lineBorder = { style: BorderStyle.SINGLE, size: 18, color: "000000" };
 
-        let imageBuffer;
-        try {
-            imageBuffer = await ambilGambarLogo('logo-kejaksaan.png');
-        } catch (imgError) {
-            alert("Peringatan: Berkas 'logo-kejaksaan.png' tidak ditemukan di folder utama GitHub Anda.");
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-            return;
-        }
+        let imageBuffer = await ambilGambarLogo('logo-kejaksaan.png');
 
         const doc = new Document({
-            styles: {
-                default: {
-                    document: {
-                        run: { font: "Arial", size: 24, color: "000000" }
-                    }
-                }
-            },
+            styles: { default: { document: { run: { font: "Arial", size: 24, color: "000000" } } } },
             sections: [{
-                properties: {
-                    page: { margin: { top: 1134, bottom: 1134, left: 1701, right: 1134 } }
-                },
+                properties: { page: { margin: { top: 1134, bottom: 1134, left: 1701, right: 1134 } } },
                 children: [
                     // === LOGO & KOP SURAT ===
                     new Table({
@@ -233,27 +354,14 @@ async function generateWord() {
                             new TableRow({
                                 children: [
                                     new TableCell({
-                                        width: { size: 15, type: WidthType.PERCENTAGE },
-                                        borders: cellBorders,
-                                        children: [
-                                            new Paragraph({
-                                                alignment: AlignmentType.CENTER,
-                                                children: [
-                                                    new ImageRun({
-                                                        data: imageBuffer,
-                                                        transformation: { width: 65, height: 65 }
-                                                    })
-                                                ]
-                                            })
-                                        ]
+                                        width: { size: 15, type: WidthType.PERCENTAGE }, borders: cellBorders,
+                                        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ data: imageBuffer, transformation: { width: 65, height: 65 } })] })]
                                     }),
                                     new TableCell({
-                                        width: { size: 85, type: WidthType.PERCENTAGE },
-                                        borders: cellBorders,
+                                        width: { size: 85, type: WidthType.PERCENTAGE }, borders: cellBorders,
                                         children: [
                                             new Paragraph({
-                                                alignment: AlignmentType.CENTER,
-                                                spacing: { after: 20 },
+                                                alignment: AlignmentType.CENTER, spacing: { after: 20 },
                                                 children: [
                                                     new TextRun({ text: "KEJAKSAAN REPUBLIK INDONESIA\n", bold: true, size: 26 }),
                                                     new TextRun({ text: "KEJAKSAAN TINGGI MALUKU\n", bold: true, size: 26 }),
@@ -272,51 +380,28 @@ async function generateWord() {
                     new Paragraph({ spacing: { before: 40 } }),
                     new Table({
                         width: { size: 100, type: WidthType.PERCENTAGE },
-                        rows: [
-                            new TableRow({
-                                children: [
-                                    new TableCell({
-                                        borders: { top: noBorder, bottom: lineBorder, left: noBorder, right: noBorder },
-                                        children: []
-                                    })
-                                ]
-                            })
-                        ]
+                        rows: [new TableRow({ children: [new TableCell({ borders: { top: noBorder, bottom: lineBorder, left: noBorder, right: noBorder }, children: [] })] })]
                     }),
                     new Paragraph({ spacing: { before: 200, after: 200 } }),
 
                     // === JUDUL & NOMOR NOTA DINAS ===
                     new Paragraph({
-                        alignment: AlignmentType.CENTER,
-                        spacing: { after: 300 },
+                        alignment: AlignmentType.CENTER, spacing: { after: 300 },
                         children: [
                             new TextRun({ text: "NOTA DINAS\n", bold: true, size: 28 }),
                             new TextRun({ text: `Nomor: ND - ${nomorNd}/Q.1.19/Cu.3/${bulanNd}/2026`, bold: true, size: 24 })
                         ]
                     }),
 
-                    // === TABEL METADATA (Kepada, Dari, dll) ===
+                    // === TABEL METADATA ===
                     new Table({
                         width: { size: 100, type: WidthType.PERCENTAGE },
                         rows: [
-                            ["Kepada", kepada],
-                            ["Dari", dari],
-                            ["Tanggal", tanggal],
-                            ["Sifat", sifat],
-                            ["Lampiran", lampiran],
-                            ["Perihal", perihal]
+                            ["Kepada", kepada], ["Dari", dari], ["Tanggal", tanggal], ["Sifat", sifat], ["Lampiran", lampiran], ["Perihal", perihal]
                         ].map(item => new TableRow({
                             children: [
-                                new TableCell({
-                                    width: { size: 15, type: WidthType.PERCENTAGE },
-                                    borders: cellBorders,
-                                    children: [new Paragraph({ children: [new TextRun({ text: item[0] })], spacing: { line: 280 } })]
-                                }),
-                                new TableCell({
-                                    width: { size: 85, type: WidthType.PERCENTAGE },
-                                    borders: cellBorders,
-                                    children: [new Paragraph({ children: [new TextRun({ text: `:  ${item[1]}` })], spacing: { line: 280 } })]
-                                })
+                                new TableCell({ width: { size: 15, type: WidthType.PERCENTAGE }, borders: cellBorders, children: [new Paragraph({ children: [new TextRun({ text: item[0] })], spacing: { line: 280 } })] }),
+                                new TableCell({ width: { size: 85, type: WidthType.PERCENTAGE }, borders: cellBorders, children: [new Paragraph({ children: [new TextRun({ text: `:  ${item[1]}` })], spacing: { line: 280 } })] })
                             ]
                         }))
                     }),
@@ -325,26 +410,15 @@ async function generateWord() {
                     new Paragraph({ spacing: { before: 100, after: 100 } }),
                     new Table({
                         width: { size: 100, type: WidthType.PERCENTAGE },
-                        rows: [
-                            new TableRow({
-                                children: [
-                                    new TableCell({
-                                        borders: { top: noBorder, bottom: lineBorder, left: noBorder, right: noBorder },
-                                        children: []
-                                    })
-                                ]
-                            })
-                        ]
+                        rows: [new TableRow({ children: [new TableCell({ borders: { top: noBorder, bottom: lineBorder, left: noBorder, right: noBorder }, children: [] })] })]
                     }),
                     new Paragraph({ spacing: { before: 200, after: 200 } }),
 
                     // === ISI PARAGRAF 1 ===
                     new Paragraph({
-                        alignment: AlignmentType.JUSTIFY,
-                        indent: { firstLine: 720 },
-                        spacing: { after: 200, line: 360 },
+                        alignment: AlignmentType.JUSTIFY, indent: { firstLine: 720 }, spacing: { after: 200, line: 360 },
                         children: [
-                            new TextRun({ text: `Sehubungan dengan ${kegiatan} pada Kejaksaan Negeri Maluku Tenggara. menimbang adanya biaya yang timbul dengan kegiatan tersebut, Bersama ini kami sampaikan Nota Dinas Pencairan Anggaran dalam rangka mendukung kegiatan operasional sebagaimana dimaksud dengan nilai sebesar ` }),
+                            new TextRun({ text: `Sehubungan dengan ${kegiatan} pada Kejaksaan Negeri Maluku Tenggara. menimbang adanya biaya yang timbul dengan kegiatan tersebut, maka Bersama ini dengan hormat kami sampaikan Nota Dinas Pencairan Anggaran dalam rangka mendukung kegiatan operasional sebagaimana dimaksud dengan nilai sebesar ` }),
                             new TextRun({ text: `${nominalFormat} `, bold: true }),
                             new TextRun({ text: `(${teksTerbilang}).`, italic: true })
                         ]
@@ -352,22 +426,16 @@ async function generateWord() {
 
                     // === ISI PARAGRAF 2 ===
                     new Paragraph({
-                        alignment: AlignmentType.JUSTIFY,
-                        indent: { firstLine: 720 },
-                        spacing: { after: 200, line: 360 },
+                        alignment: AlignmentType.JUSTIFY, indent: { firstLine: 720 }, spacing: { after: 200, line: 360 },
                         children: [
-                            new TextRun({ text: `Kiranya dijadikan dasar untuk penyerapan anggaran berdasarkan DIPA Tahun ${dipaTahun} / Nomor Mata Anggaran ${mataAnggaran}.` })
+                            new TextRun({ text: `Kiranya dijadikan dasar untuk penyerapan anggaran berdasarkan DIPA Tahun ${dipaTahun} / Nomor Mata Anggaran ${teksMataAnggaran}.` })
                         ]
                     }),
 
                     // === PENUTUP ===
-                    new Paragraph({
-                        indent: { firstLine: 720 },
-                        spacing: { after: 600, line: 360 },
-                        children: [new TextRun({ text: "Demikian untuk menjadi maklum." })]
-                    }),
+                    new Paragraph({ indent: { firstLine: 720 }, spacing: { after: 600, line: 360 }, children: [new TextRun({ text: "Demikian untuk menjadi maklum." })] }),
 
-                    // === TANDA TANGAN ===
+                    // === TANDA TANGAN DINAMIS ===
                     new Table({
                         width: { size: 100, type: WidthType.PERCENTAGE },
                         rows: [
@@ -375,16 +443,14 @@ async function generateWord() {
                                 children: [
                                     new TableCell({ width: { size: 55, type: WidthType.PERCENTAGE }, borders: cellBorders, children: [] }),
                                     new TableCell({
-                                        width: { size: 45, type: WidthType.PERCENTAGE },
-                                        borders: cellBorders,
+                                        width: { size: 45, type: WidthType.PERCENTAGE }, borders: cellBorders,
                                         children: [
                                             new Paragraph({
-                                                alignment: AlignmentType.LEFT,
-                                                spacing: { line: 240 },
+                                                alignment: AlignmentType.LEFT, spacing: { line: 240 },
                                                 children: [
-                                                    new TextRun({ text: "Kuasa Pengguna Anggaran\n\n\n\n\n", size: 24 }),
-                                                    new TextRun({ text: "Dr. Fadjar\n", bold: true, size: 24 }),
-                                                    new TextRun({ text: "Jaksa Utama Pratama", size: 24 })
+                                                    new TextRun({ text: `${pjbJabatan}\n\n\n\n\n`, size: 24 }),
+                                                    new TextRun({ text: `${pjbNama}\n`, bold: true, size: 24 }),
+                                                    new TextRun({ text: `${pjbPangkat}`, size: 24 })
                                                 ]
                                             })
                                         ]
@@ -395,39 +461,26 @@ async function generateWord() {
                     }),
                     new Paragraph({ spacing: { before: 400 } }),
 
-                    // === TEMBUSAN ===
+                    // === TEMBUSAN DINAMIS ===
                     new Paragraph({
                         spacing: { line: 240 },
                         children: [
                             new TextRun({ text: "Tembusan Yth.:\n", bold: true, size: 22 }),
-                            new TextRun({ text: "Pejabat Pembuat Komitmen;\n", size: 22 }),
-                            new TextRun({ text: "A r s i p .-", size: 22 })
+                            ...arrayTembusan.map((t, idx) => new TextRun({ text: `${idx + 1}. ${t}\n`, size: 22 }))
                         ]
                     })
                 ]
             }]
         });
 
-        // Proses Unduh Berkas Word
         Packer.toBlob(doc).then(blob => {
-            if (typeof saveAs !== 'undefined') {
-                saveAs(blob, `Nota_Dinas_ND_${nomorNd}.docx`);
-            } else {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `Nota_Dinas_ND_${nomorNd}.docx`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-            }
+            saveAs(blob, `Nota_Dinas_ND_${nomorNd}.docx`);
             btn.disabled = false;
             btn.innerHTML = originalText;
         });
 
     } catch (error) {
-        alert("Terjadi eror internal: " + error.message);
+        alert("Eror internal: " + error.message);
         btn.disabled = false;
         btn.innerHTML = originalText;
     }
