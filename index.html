@@ -6,10 +6,12 @@
     <title>Generator Nota Dinas Otomatis</title>
     <!-- Bootstrap untuk Tampilan yang Rapi -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Library docx.js untuk Generate Word di Browser -->
-    <script src="https://unpkg.com/docx@8.5.0/build/index.js"></script>
+    
+    <!-- Pustaka docx.js versi stabil dari jsDelivr (Alternatif unpkg yang lebih aman dari blokir) -->
+    <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
     <!-- Library FileSaver untuk Download File -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
     <style>
         body { background-color: #f8f9fa; padding: 30px 0; }
         .card { box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -105,14 +107,21 @@ function terbilang(n) {
 
 // Fungsi Utama Membuat Dokumen Word
 function generateWord() {
-    // Ambil elemen tombol untuk memberikan notifikasi visual
     const btn = document.querySelector("button");
     const originalText = btn.innerHTML;
     
-    // Validasi form dasar (memastikan field wajib sudah diisi)
+    // Validasi form dasar
     const form = document.getElementById('notaForm');
     if (!form.checkValidity()) {
         form.reportValidity();
+        return;
+    }
+
+    // Cek apakah library docx berhasil dimuat oleh browser
+    // Pada versi UMD, library mendaftarkan dirinya ke objek window.docx
+    const docxLib = window.docx;
+    if (!docxLib) {
+        alert("Eror: Pustaka 'docx' gagal dimuat oleh browser Anda. Mohon pastikan komputer terhubung dengan internet atau nonaktifkan AdBlocker Anda untuk situs ini, lalu muat ulang (refresh) halaman.");
         return;
     }
 
@@ -139,16 +148,8 @@ function generateWord() {
         const nominalFormat = new Intl.NumberFormat('id-ID').format(nominal);
         const teksTerbilang = terbilang(nominal) + " Rupiah";
 
-        // Mengamankan pemanggilan library dari object window global
-        const docxObj = window.docx || docx;
-        if (!docxObj) {
-            alert("Gagal memuat pustaka pembuat dokumen (docx.js). Periksa koneksi internet Anda.");
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-            return;
-        }
-
-        const { Document, Packer, Paragraph, TextRun, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } = docxObj;
+        // Ekstraksi modul dari library docx yang terverifikasi aman
+        const { Document, Packer, Paragraph, TextRun, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } = docxLib;
 
         // Pengaturan border transparan untuk tabel biodata atas
         const noBorder = { style: BorderStyle.NONE, size: 0, color: "auto" };
@@ -174,9 +175,9 @@ function generateWord() {
                         alignment: AlignmentType.CENTER,
                         children: [new TextRun({ text: "___________________________________________________________________________", bold: true })]
                     }),
-                    new Paragraph({ text: "" }), // Spasi
+                    new Paragraph({ text: "" }),
 
-                    // TABEL INFORMASI (Kepada, Dari, dkk)
+                    // TABEL INFORMASI
                     new Table({
                         width: { size: 100, type: WidthType.PERCENTAGE },
                         rows: [
@@ -246,7 +247,7 @@ function generateWord() {
                     new Paragraph({ text: "" }),
                     new Paragraph({ text: "" }),
 
-                    // TANDA TANGAN (Rata Kanan)
+                    // TANDA TANGAN
                     new Paragraph({
                         alignment: AlignmentType.RIGHT,
                         children: [
@@ -268,14 +269,11 @@ function generateWord() {
             }]
         });
 
-        // Proses kompilasi dokumen menjadi berkas unduhan
+        // Simpan menjadi file Word
         Packer.toBlob(doc).then(blob => {
-            if (window.saveAs) {
-                window.saveAs(blob, `Nota_Dinas_ND_${nomorNd}.docx`);
-            } else if (typeof saveAs !== 'undefined') {
+            if (typeof saveAs !== 'undefined') {
                 saveAs(blob, `Nota_Dinas_ND_${nomorNd}.docx`);
             } else {
-                // Skenario cadangan jika FileSaver.js gagal termuat
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -286,24 +284,21 @@ function generateWord() {
                 window.URL.revokeObjectURL(url);
             }
 
-            // Kembalikan tombol ke kondisi semula setelah sukses
             btn.disabled = false;
             btn.innerHTML = originalText;
-            alert("✅ Nota dinas berhasil diunduh!");
         }).catch(err => {
-            console.error(err);
-            alert("Terjadi kesalahan saat mengemas file Word.");
+            alert("Terjadi kesalahan saat mengemas berkas.");
             btn.disabled = false;
             btn.innerHTML = originalText;
         });
 
     } catch (error) {
-        console.error(error);
-        alert("Terjadi error sistem pada JavaScript: " + error.message);
+        alert("Terjadi eror internal: " + error.message);
         btn.disabled = false;
         btn.innerHTML = originalText;
     }
 }
 </script>
+
 </body>
 </html>
