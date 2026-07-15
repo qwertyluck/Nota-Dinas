@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generator Nota Dinas Presisi V2</title>
+    <title>Generator Nota Dinas Presisi V4</title>
     <!-- Bootstrap untuk Tampilan Form -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
@@ -27,7 +27,7 @@
             <div class="card p-4 mb-5">
                 <div class="header-title text-center">
                     <h3 class="text-success fw-bold mb-1">KEJAKSAAN NEGERI MALUKU TENGGARA</h3>
-                    <p class="text-muted small mb-0">Generator Nota Dinas Sesuai Softfile Word Terkini</p>
+                    <p class="text-muted small mb-0">Generator Nota Dinas Otomatis (Input Kalender Interaktif)</p>
                 </div>
 
                 <form id="notaForm">
@@ -37,8 +37,8 @@
                             <input type="text" id="nomorNd" class="form-control" placeholder="Contoh: 123" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Bulan ND (Romawi/Angka)</label>
-                            <input type="text" id="bulanNd" class="form-control" value="07" required>
+                            <label class="form-label fw-bold">Bulan ND (Otomatis dari Kalender)</label>
+                            <input type="text" id="bulanNd" class="form-control" readonly style="background-color: #e9ecef;">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Kepada</label>
@@ -48,9 +48,12 @@
                             <label class="form-label fw-bold">Dari</label>
                             <input type="text" id="dari" class="form-control" value="Kuasa Pengguna Anggaran" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Tanggal</label>
-                            <input type="text" id="tanggal" class="form-control" value="15 Juli 2026" required>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Pilih Tanggal Nota Dinas (Klik Ikon Kalender)</label>
+                            <!-- Input bertipe date untuk memunculkan kalender pop-up -->
+                            <input type="date" id="tanggalKalender" class="form-control" onchange="updateFormatTanggal()" required>
+                            <!-- Input tersembunyi/penyimpanan hasil konversi teks Indonesia -->
+                            <input type="hidden" id="tanggalTeks">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Sifat</label>
@@ -60,7 +63,7 @@
                             <label class="form-label fw-bold">Lampiran</label>
                             <input type="text" id="lampiran" class="form-control" value="-" required>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <label class="form-label fw-bold">Perihal</label>
                             <input type="text" id="perihal" class="form-control" value="Nota Dinas Pencairan Anggaran" required>
                         </div>
@@ -92,9 +95,48 @@
 </div>
 
 <script>
-// Base64 Data untuk Logo Kejaksaan RI agar tidak perlu load eksternal
-const logoKejaksaanBase64 = "data:image/png;base64,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";
+// Fungsi yang berjalan otomatis saat halaman pertama kali dibuka
+document.addEventListener("DOMContentLoaded", function() {
+    const hariIni = new Date();
+    
+    // Format YYYY-MM-DD agar bisa diterima oleh input type="date"
+    const tahun = hariIni.getFullYear();
+    const bulan = String(hariIni.getMonth() + 1).padStart(2, '0');
+    const tanggal = String(hariIni.getDate()).padStart(2, '0');
+    
+    // Set tanggal kalender ke hari ini secara otomatis
+    const inputKalender = document.getElementById("tanggalKalender");
+    inputKalender.value = `${tahun}-${bulan}-${tanggal}`;
+    
+    // Jalankan fungsi update agar text Indonesia dan Bulan ND langsung terisi otomatis
+    updateFormatTanggal();
+});
 
+// Fungsi untuk mengonversi pilihan kalender menjadi format teks Indonesia & update nomor bulan
+function updateFormatTanggal() {
+    const nilaiKalender = document.getElementById("tanggalKalender").value;
+    if (!nilaiKalender) return;
+
+    const bulanIndo = [
+        "Januari", "Februari", "Maret", "April", "Mei", "Juni", 
+        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    ];
+
+    // Memecah string tanggal YYYY-MM-DD
+    const parts = nilaiKalender.split("-");
+    const tahun = parts[0];
+    const indexBulan = parseInt(parts[1]) - 1;
+    const tanggal = parseInt(parts[2]);
+
+    // 1. Gabungkan menjadi teks tanggal Indonesia (Misal: 15 Juli 2026)
+    const teksIndonesia = `${tanggal} ${bulanIndo[indexBulan]} ${tahun}`;
+    document.getElementById("tanggalTeks").value = teksIndonesia;
+
+    // 2. Update otomatis Bulan ND dengan angka 2 digit (Misal: 07) sesuai pilihan kalender
+    document.getElementById("bulanNd").value = parts[1];
+}
+
+// Fungsi untuk mengubah Angka menjadi Terbilang Indonesia
 function terbilang(n) {
     const bilangan = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"];
     if (n < 12) return bilangan[n];
@@ -108,7 +150,17 @@ function terbilang(n) {
     return "Angka Terlalu Besar";
 }
 
-function generateWord() {
+// Fungsi pembantu untuk mengambil file gambar logo lokal
+async function ambilGambarLogo(url) {
+    const respon = await fetch(url);
+    if (!respon.ok) {
+        throw new Error("Gagal memuat file logo-kejaksaan.png.");
+    }
+    const blob = await respon.blob();
+    return await blob.arrayBuffer();
+}
+
+async function generateWord() {
     const btn = document.querySelector("button");
     const originalText = btn.innerHTML;
     
@@ -130,7 +182,8 @@ function generateWord() {
     try {
         const kepada = document.getElementById('kepada').value;
         const dari = document.getElementById('dari').value;
-        const tanggal = document.getElementById('tanggal').value;
+        // Mengambil hasil konversi tanggal teks Indonesia
+        const tanggal = document.getElementById('tanggalTeks').value;
         const sifat = document.getElementById('sifat').value;
         const lampiran = document.getElementById('lampiran').value;
         const perihal = document.getElementById('perihal').value;
@@ -146,35 +199,34 @@ function generateWord() {
 
         const { Document, Packer, Paragraph, TextRun, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle, ImageRun } = docxLib;
 
-        // Kontrol Border Transparan & Tebal Baku
         const noBorder = { style: BorderStyle.NONE, size: 0, color: "auto" };
         const cellBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
         const lineBorder = { style: BorderStyle.SINGLE, size: 18, color: "000000" };
 
-        // Konversi string base64 logo ke bentuk ArrayBuffer untuk disuntikkan ke dokumen
-        const base64Content = logoKejaksaanBase64.split(",")[1];
-        const binaryString = window.atob(base64Content);
-        const len = binaryString.length;
-        const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
+        let imageBuffer;
+        try {
+            imageBuffer = await ambilGambarLogo('logo-kejaksaan.png');
+        } catch (imgError) {
+            alert("Peringatan: Berkas 'logo-kejaksaan.png' tidak ditemukan di folder utama GitHub Anda.");
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+            return;
         }
 
         const doc = new Document({
             styles: {
                 default: {
                     document: {
-                        run: { font: "Arial", size: 24, color: "000000" } // Arial 12pt baku
+                        run: { font: "Arial", size: 24, color: "000000" }
                     }
                 }
             },
             sections: [{
                 properties: {
-                    // Margin Tata Naskah Dinas (Kiri 3 cm, Atas/Bawah/Kanan 2 cm)
                     page: { margin: { top: 1134, bottom: 1134, left: 1701, right: 1134 } }
                 },
                 children: [
-                    // === LOGO & KOP SURAT (Dijejerkan Rapi Pakai Grid Tabel Invisible) ===
+                    // === LOGO & KOP SURAT ===
                     new Table({
                         width: { size: 100, type: WidthType.PERCENTAGE },
                         rows: [
@@ -188,8 +240,8 @@ function generateWord() {
                                                 alignment: AlignmentType.CENTER,
                                                 children: [
                                                     new ImageRun({
-                                                        data: bytes.buffer,
-                                                        transformation: { width: 65, height: 65 } // Skala Logo Proporsional
+                                                        data: imageBuffer,
+                                                        transformation: { width: 65, height: 65 }
                                                     })
                                                 ]
                                             })
@@ -216,7 +268,7 @@ function generateWord() {
                         ]
                     }),
 
-                    // Garis Pembatas KOP Asli Word
+                    // Garis Pembatas KOP
                     new Paragraph({ spacing: { before: 40 } }),
                     new Table({
                         width: { size: 100, type: WidthType.PERCENTAGE },
@@ -233,7 +285,7 @@ function generateWord() {
                     }),
                     new Paragraph({ spacing: { before: 200, after: 200 } }),
 
-                    // === JUDUL & NOMOR NOTA DINAS (Sesuai Struktur Softfile Baru) ===
+                    // === JUDUL & NOMOR NOTA DINAS ===
                     new Paragraph({
                         alignment: AlignmentType.CENTER,
                         spacing: { after: 300 },
@@ -243,7 +295,7 @@ function generateWord() {
                         ]
                     }),
 
-                    // === TABEL METADATA (Kepada, Dari, dll di bawah Judul) ===
+                    // === TABEL METADATA (Kepada, Dari, dll) ===
                     new Table({
                         width: { size: 100, type: WidthType.PERCENTAGE },
                         rows: [
@@ -269,7 +321,7 @@ function generateWord() {
                         }))
                     }),
 
-                    // Garis Pembatas Tengah bawah Informasi
+                    // Garis Pembatas Tengah
                     new Paragraph({ spacing: { before: 100, after: 100 } }),
                     new Table({
                         width: { size: 100, type: WidthType.PERCENTAGE },
@@ -289,8 +341,8 @@ function generateWord() {
                     // === ISI PARAGRAF 1 ===
                     new Paragraph({
                         alignment: AlignmentType.JUSTIFY,
-                        indent: { firstLine: 720 }, // Menjorok pas 1 Tab
-                        spacing: { after: 200, line: 360 }, // Spasi 1.5 rapat
+                        indent: { firstLine: 720 },
+                        spacing: { after: 200, line: 360 },
                         children: [
                             new TextRun({ text: `Sehubungan dengan ${kegiatan} pada Kejaksaan Negeri Maluku Tenggara. menimbang adanya biaya yang timbul dengan kegiatan tersebut, maka Bersama ini dengan hormat kami sampaikan Nota Dinas Pencairan Anggaran dalam rangka mendukung kegiatan operasional sebagaimana dimaksud dengan nilai sebesar ` }),
                             new TextRun({ text: `${nominalFormat} `, bold: true }),
@@ -315,7 +367,7 @@ function generateWord() {
                         children: [new TextRun({ text: "Demikian untuk menjadi maklum." })]
                     }),
 
-                    // === TANDA TANGAN (Sisi Kanan Halaman) ===
+                    // === TANDA TANGAN ===
                     new Table({
                         width: { size: 100, type: WidthType.PERCENTAGE },
                         rows: [
@@ -343,7 +395,7 @@ function generateWord() {
                     }),
                     new Paragraph({ spacing: { before: 400 } }),
 
-                    // === TEMBUSAN (Sesuai Letak Paling Bawah Softfile) ===
+                    // === TEMBUSAN ===
                     new Paragraph({
                         spacing: { line: 240 },
                         children: [
