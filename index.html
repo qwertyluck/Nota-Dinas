@@ -105,150 +105,205 @@ function terbilang(n) {
 
 // Fungsi Utama Membuat Dokumen Word
 function generateWord() {
-    // Ambil Nilai dari Input Form
-    const kepada = document.getElementById('kepada').value;
-    const dari = document.getElementById('dari').value;
-    const tanggal = document.getElementById('tanggal').value;
-    const sifat = document.getElementById('sifat').value;
-    const lampiran = document.getElementById('lampiran').value;
-    const perihal = document.getElementById('perihal').value;
-    const nomorNd = document.getElementById('nomorNd').value;
-    const bulanNd = document.getElementById('bulanNd').value;
-    const kegiatan = document.getElementById('kegiatan').value;
-    const nominal = parseInt(document.getElementById('nominal').value);
-    const dipaTahun = document.getElementById('dipaTahun').value;
-    const mataAnggaran = document.getElementById('mataAnggaran').value;
+    // Ambil elemen tombol untuk memberikan notifikasi visual
+    const btn = document.querySelector("button");
+    const originalText = btn.innerHTML;
+    
+    // Validasi form dasar (memastikan field wajib sudah diisi)
+    const form = document.getElementById('notaForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
 
-    // Format mata uang dan terbilang
-    const nominalFormat = new Intl.NumberFormat('id-ID').format(nominal);
-    const teksTerbilang = terbilang(nominal) + " Rupiah";
+    // Ubah tombol menjadi mode loading
+    btn.disabled = true;
+    btn.innerHTML = "⏳ Sedang memproses dokumen...";
 
-    // Panggil object global dari docx.js
-    const { Document, Packer, Paragraph, TextRun, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } = docx;
+    try {
+        // Ambil Nilai dari Input Form
+        const kepada = document.getElementById('kepada').value;
+        const dari = document.getElementById('dari').value;
+        const tanggal = document.getElementById('tanggal').value;
+        const sifat = document.getElementById('sifat').value;
+        const lampiran = document.getElementById('lampiran').value;
+        const perihal = document.getElementById('perihal').value;
+        const nomorNd = document.getElementById('nomorNd').value;
+        const bulanNd = document.getElementById('bulanNd').value;
+        const kegiatan = document.getElementById('kegiatan').value;
+        const nominal = parseInt(document.getElementById('nominal').value) || 0;
+        const dipaTahun = document.getElementById('dipaTahun').value;
+        const mataAnggaran = document.getElementById('mataAnggaran').value;
 
-    // Pengaturan border transparan untuk tabel biodata atas
-    const noBorder = { style: BorderStyle.NONE, size: 0, color: "auto" };
-    const bordersTransparan = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
+        // Format mata uang dan terbilang
+        const nominalFormat = new Intl.NumberFormat('id-ID').format(nominal);
+        const teksTerbilang = terbilang(nominal) + " Rupiah";
 
-    const doc = new Document({
-        sections: [{
-            properties: {},
-            children: [
-                // KOP SURAT
-                new Paragraph({
-                    alignment: AlignmentType.CENTER,
-                    children: [
-                        new TextRun({ text: "KEJAKSAAN REPUBLIK INDONESIA\n", bold: true, size: 24 }),
-                        new TextRun({ text: "KEJAKSAAN TINGGI MALUKU\n", bold: true, size: 24 }),
-                        new TextRun({ text: "KEJAKSAAN NEGERI MALUKU TENGGARA\n", bold: true, size: 24 }),
-                        new TextRun({ text: "Jl. Cempaka Perumahan Pemda, Kel. Ohoijang Watdek, Kec. Kei Kecil, Kabupaten Maluku Tenggara\n", italic: true, size: 20 }),
-                    ],
-                }),
-                // Garis Pembatas KOP
-                new Paragraph({
-                    alignment: AlignmentType.CENTER,
-                    children: [new TextRun({ text: "___________________________________________________________________________", bold: true })]
-                }),
-                new Paragraph({ text: "" }), // Spasi
+        // Mengamankan pemanggilan library dari object window global
+        const docxObj = window.docx || docx;
+        if (!docxObj) {
+            alert("Gagal memuat pustaka pembuat dokumen (docx.js). Periksa koneksi internet Anda.");
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+            return;
+        }
 
-                // TABEL INFORMASI (Kepada, Dari, dkk)
-                new Table({
-                    width: { size: 100, type: WidthType.PERCENTAGE },
-                    rows: [
-                        ["Kepada", kepada],
-                        ["Dari", dari],
-                        ["Tanggal", tanggal],
-                        ["Sifat", sifat],
-                        ["Lampiran", lampiran],
-                        ["Perihal", perihal]
-                    ].map(item => new TableRow({
+        const { Document, Packer, Paragraph, TextRun, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } = docxObj;
+
+        // Pengaturan border transparan untuk tabel biodata atas
+        const noBorder = { style: BorderStyle.NONE, size: 0, color: "auto" };
+        const bordersTransparan = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
+
+        // Inisialisasi Dokumen Word
+        const doc = new Document({
+            sections: [{
+                properties: {},
+                children: [
+                    // KOP SURAT
+                    new Paragraph({
+                        alignment: AlignmentType.CENTER,
                         children: [
-                            new TableCell({
-                                width: { size: 20, type: WidthType.PERCENTAGE },
-                                borders: bordersTransparan,
-                                children: [new Paragraph({ children: [new TextRun({ text: item[0], size: 22 })] })]
-                            }),
-                            new TableCell({
-                                width: { size: 80, type: WidthType.PERCENTAGE },
-                                borders: bordersTransparan,
-                                children: [new Paragraph({ children: [new TextRun({ text: ` :  ${item[1]}`, size: 22 })] })]
-                            })
+                            new TextRun({ text: "KEJAKSAAN REPUBLIK INDONESIA\n", bold: true, size: 24 }),
+                            new TextRun({ text: "KEJAKSAAN TINGGI MALUKU\n", bold: true, size: 24 }),
+                            new TextRun({ text: "KEJAKSAAN NEGERI MALUKU TENGGARA\n", bold: true, size: 24 }),
+                            new TextRun({ text: "Jl. Cempaka Perumahan Pemda, Kel. Ohoijang Watdek, Kec. Kei Kecil, Kabupaten Maluku Tenggara\n", italic: true, size: 20 }),
+                        ],
+                    }),
+                    // Garis Pembatas KOP
+                    new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [new TextRun({ text: "___________________________________________________________________________", bold: true })]
+                    }),
+                    new Paragraph({ text: "" }), // Spasi
+
+                    // TABEL INFORMASI (Kepada, Dari, dkk)
+                    new Table({
+                        width: { size: 100, type: WidthType.PERCENTAGE },
+                        rows: [
+                            ["Kepada", kepada],
+                            ["Dari", dari],
+                            ["Tanggal", tanggal],
+                            ["Sifat", sifat],
+                            ["Lampiran", lampiran],
+                            ["Perihal", perihal]
+                        ].map(item => new TableRow({
+                            children: [
+                                new TableCell({
+                                    width: { size: 20, type: WidthType.PERCENTAGE },
+                                    borders: bordersTransparan,
+                                    children: [new Paragraph({ children: [new TextRun({ text: item[0], size: 22 })] })]
+                                }),
+                                new TableCell({
+                                    width: { size: 80, type: WidthType.PERCENTAGE },
+                                    borders: bordersTransparan,
+                                    children: [new Paragraph({ children: [new TextRun({ text: ` :  ${item[1]}`, size: 22 })] })]
+                                })
+                            ]
+                        }))
+                    }),
+
+                    // Garis Pembatas Bawah Tabel
+                    new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [new TextRun({ text: "___________________________________________________________________________", bold: true })]
+                    }),
+                    new Paragraph({ text: "" }),
+
+                    // JUDUL NOTA DINAS
+                    new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [
+                            new TextRun({ text: "NOTA DINAS\n", bold: true, size: 26 }),
+                            new TextRun({ text: `Nomor: ND-${nomorNd}/Q.1.19/Cu.3/${bulanNd}/2026`, bold: true, size: 22 })
                         ]
-                    }))
-                }),
+                    }),
+                    new Paragraph({ text: "" }),
 
-                // Garis Pembatas Bawah Tabel
-                new Paragraph({
-                    alignment: AlignmentType.CENTER,
-                    children: [new TextRun({ text: "___________________________________________________________________________", bold: true })]
-                }),
-                new Paragraph({ text: "" }),
+                    // ISI PARAGRAF 1
+                    new Paragraph({
+                        alignment: AlignmentType.JUSTIFY,
+                        children: [
+                            new TextRun({ text: `Sehubungan dengan ${kegiatan} pada Kejaksaan Negeri Maluku Tenggara. menimbang adanya biaya yang timbul dengan kegiatan tersebut, maka Bersama ini dengan hormat kami sampaikan Nota Dinas Pencairan Anggaran dalam rangka mendukung kegiatan operasional sebagaimana dimaksud dengan nilai sebesar `, size: 22 }),
+                            new TextRun({ text: `Rp. ${nominalFormat} `, bold: true, size: 22 }),
+                            new TextRun({ text: `(${teksTerbilang}).`, italic: true, size: 22 })
+                        ]
+                    }),
+                    new Paragraph({ text: "" }),
 
-                // JUDUL NOTA DINAS
-                new Paragraph({
-                    alignment: AlignmentType.CENTER,
-                    children: [
-                        new TextRun({ text: "NOTA DINAS\n", bold: true, size: 26 }),
-                        new TextRun({ text: `Nomor: ND-${nomorNd}/Q.1.19/Cu.3/${bulanNd}/2026`, bold: true, size: 22 })
-                    ]
-                }),
-                new Paragraph({ text: "" }),
+                    // ISI PARAGRAF 2
+                    new Paragraph({
+                        alignment: AlignmentType.JUSTIFY,
+                        children: [
+                            new TextRun({ text: `Kiranya dijadikan dasar untuk penyerapan anggaran berdasarkan DIPA Tahun ${dipaTahun} / Nomor Mata Anggaran ${mataAnggaran}.`, size: 22 })
+                        ]
+                    }),
+                    new Paragraph({ text: "" }),
 
-                // ISI PARAGRAF 1
-                new Paragraph({
-                    alignment: AlignmentType.JUSTIFY,
-                    children: [
-                        new TextRun({ text: `Sehubungan dengan ${kegiatan} pada Kejaksaan Negeri Maluku Tenggara. menimbang adanya biaya yang timbul dengan kegiatan tersebut, maka Bersama ini dengan hormat kami sampaikan Nota Dinas Pencairan Anggaran dalam rangka mendukung kegiatan operasional sebagaimana dimaksud dengan nilai sebesar `, size: 22 }),
-                        new TextRun({ text: `Rp. ${nominalFormat} `, bold: true, size: 22 }),
-                        new TextRun({ text: `(${teksTerbilang}).`, italic: true, size: 22 })
-                    ]
-                }),
-                new Paragraph({ text: "" }),
+                    // PENUTUP
+                    new Paragraph({
+                        children: [new TextRun({ text: "Demikian untuk menjadi maklum.", size: 22 })]
+                    }),
+                    new Paragraph({ text: "" }),
+                    new Paragraph({ text: "" }),
 
-                // ISI PARAGRAF 2
-                new Paragraph({
-                    alignment: AlignmentType.JUSTIFY,
-                    children: [
-                        new TextRun({ text: `Kiranya dijadikan dasar untuk penyerapan anggaran berdasarkan DIPA Tahun ${dipaTahun} / Nomor Mata Anggaran ${mataAnggaran}.`, size: 22 })
-                    ]
-                }),
-                new Paragraph({ text: "" }),
+                    // TANDA TANGAN (Rata Kanan)
+                    new Paragraph({
+                        alignment: AlignmentType.RIGHT,
+                        children: [
+                            new TextRun({ text: "Kuasa Pengguna Anggaran\n\n\n\n\n", size: 22 }),
+                            new TextRun({ text: "Dr. Fadjar\n", bold: true, size: 22 }),
+                            new TextRun({ text: "Jaksa Utama Pratama", size: 22 })
+                        ]
+                    }),
+                    new Paragraph({ text: "" }),
 
-                // PENUTUP
-                new Paragraph({
-                    children: [new TextRun({ text: "Demikian untuk menjadi maklum.", size: 22 })]
-                }),
-                new Paragraph({ text: "" }),
-                new Paragraph({ text: "" }),
+                    // TEMBUSAN
+                    new Paragraph({
+                        children: [
+                            new TextRun({ text: "Tembusan Yth.:\n", bold: true, size: 20 }),
+                            new TextRun({ text: "1. Pejabat Pembuat Komitmen;\n2. Arsip.-", size: 20 })
+                        ]
+                    })
+                ]
+            }]
+        });
 
-                // TANDA TANGAN (Rata Kanan)
-                new Paragraph({
-                    alignment: AlignmentType.RIGHT,
-                    children: [
-                        new TextRun({ text: "Kuasa Pengguna Anggaran\n\n\n\n\n", size: 22 }),
-                        new TextRun({ text: "Dr. Fadjar\n", bold: true, size: 22 }),
-                        new TextRun({ text: "Jaksa Utama Pratama", size: 22 })
-                    ]
-                }),
-                new Paragraph({ text: "" }),
+        // Proses kompilasi dokumen menjadi berkas unduhan
+        Packer.toBlob(doc).then(blob => {
+            if (window.saveAs) {
+                window.saveAs(blob, `Nota_Dinas_ND_${nomorNd}.docx`);
+            } else if (typeof saveAs !== 'undefined') {
+                saveAs(blob, `Nota_Dinas_ND_${nomorNd}.docx`);
+            } else {
+                // Skenario cadangan jika FileSaver.js gagal termuat
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Nota_Dinas_ND_${nomorNd}.docx`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }
 
-                // TEMBUSAN
-                new Paragraph({
-                    children: [
-                        new TextRun({ text: "Tembusan Yth.:\n", bold: true, size: 20 }),
-                        new TextRun({ text: "1. Pejabat Pembuat Komitmen;\n2. Arsip.-", size: 20 })
-                    ]
-                })
-            ]
-        }]
-    });
+            // Kembalikan tombol ke kondisi semula setelah sukses
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+            alert("✅ Nota dinas berhasil diunduh!");
+        }).catch(err => {
+            console.error(err);
+            alert("Terjadi kesalahan saat mengemas file Word.");
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        });
 
-    // Proses pembuatan file blob Word dan trigger download
-    Packer.toBlob(doc).then(blob => {
-        saveAs(blob, `Nota_Dinas_ND_${nomorNd}.docx`);
-    });
+    } catch (error) {
+        console.error(error);
+        alert("Terjadi error sistem pada JavaScript: " + error.message);
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
 }
 </script>
-
 </body>
 </html>
