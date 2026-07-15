@@ -322,7 +322,6 @@ async function generateWord() {
 
         let imageBuffer = await ambilGambarLogo('logo-kejaksaan.png');
         
-        // Pembuatan komponen kolom logo pendukung Kop Surat
         let logoCellChildren = [];
         if (imageBuffer) {
             logoCellChildren.push(new Paragraph({ 
@@ -404,9 +403,10 @@ async function generateWord() {
 
                     new Paragraph({ spacing: { before: 240 } }),
 
-                    // === ISI PARAGRAF 1 ===
+                    // === ISI PARAGRAF 1 (RATA KANAN-KIRI / JUSTIFY) ===
                     new Paragraph({
-                        alignment: AlignmentType.JUSTIFY, indent: { firstLine: 720 }, 
+                        alignment: AlignmentType.JUSTIFY, 
+                        indent: { firstLine: 720 }, 
                         spacing: { before: 0, after: 0, line: 360 },
                         children: [
                             new TextRun({ text: `Sehubungan dengan ${kegiatan} pada Kejaksaan Negeri Maluku Tenggara. menimbang adanya biaya yang timbul dengan kegiatan tersebut, maka Bersama ini dengan hormat kami sampaikan Nota Dinas Pencairan Anggaran dalam rangka mendukung kegiatan operasional sebagaimana dimaksud dengan nilai sebesar ` }),
@@ -415,20 +415,24 @@ async function generateWord() {
                         ]
                     }),
 
-                    // === ISI PARAGRAF 2 ===
+                    // === ISI PARAGRAF 2 (RATA KANAN-KIRI / JUSTIFY) ===
                     new Paragraph({
-                        alignment: AlignmentType.JUSTIFY, indent: { firstLine: 720 }, 
+                        alignment: AlignmentType.JUSTIFY, 
+                        indent: { firstLine: 720 }, 
                         spacing: { before: 0, after: 0, line: 360 },
                         children: [
                             new TextRun({ text: `Kiranya dijadikan dasar untuk penyerapan anggaran berdasarkan DIPA Tahun ${dipaTahun} / Nomor Mata Anggaran ${teksMataAnggaran}.` })
                         ]
                     }),
 
-                    // === PENUTUP ===
+                    // === PENUTUP (RATA KANAN-KIRI / JUSTIFY) ===
                     new Paragraph({ 
+                        alignment: AlignmentType.JUSTIFY, 
                         indent: { firstLine: 720 }, 
                         spacing: { before: 0, after: 0, line: 360 }, 
-                        children: [new TextRun({ text: "Demikian untuk menjadi maklum." })] 
+                        children: [
+                            new TextRun({ text: "Demikian untuk menjadi maklum." })
+                        ]
                     }),
                     
                     new Paragraph({ spacing: { before: 400 } }),
