@@ -256,7 +256,8 @@ async function ambilGambarLogo(url) {
         const blob = await respon.blob();
         return await blob.arrayBuffer();
     } catch {
-        throw new Error("Berkas 'logo-kejaksaan.png' tidak ditemukan.");
+        // Fallback: Mengembalikan elemen kosong/null alih-alih merusak seluruh skrip pembentukan berkas
+        return null;
     }
 }
 
@@ -303,6 +304,9 @@ async function generateWord() {
         const nominal = parseInt(document.getElementById('nominal').value) || 0;
         const dipaTahun = document.getElementById('dipaTahun').value;
         
+        const nilaiKalender = document.getElementById("tanggalKalender").value;
+        const tahunNd = nilaiKalender ? nilaiKalender.split("-")[0] : "2026";
+        
         const pjbJabatan = document.getElementById('pjbJabatan').value;
         const pjbNama = document.getElementById('pjbNama').value;
         const pjbPangkat = document.getElementById('pjbPangkat').value;
@@ -314,11 +318,18 @@ async function generateWord() {
 
         const noBorder = { style: BorderStyle.NONE, size: 0, color: "auto" };
         const cellBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
-        
-        // RINCIAN 4: Border tipe Double (Garis Ganda) tebal 1.5 pt (size: 12 dxa) untuk pembatas bawah tabel metadata
         const doubleBorderBottom = { style: BorderStyle.DOUBLE, size: 12, color: "000000" };
 
         let imageBuffer = await ambilGambarLogo('logo-kejaksaan.png');
+        
+        // Pembuatan komponen kolom logo pendukung Kop Surat
+        let logoCellChildren = [];
+        if (imageBuffer) {
+            logoCellChildren.push(new Paragraph({ 
+                alignment: AlignmentType.CENTER, 
+                children: [new ImageRun({ data: imageBuffer, transformation: { width: 65, height: 65 } })] 
+            }));
+        }
 
         const doc = new Document({
             styles: { default: { document: { run: { font: "Arial", size: 24, color: "000000" } } } },
@@ -333,12 +344,11 @@ async function generateWord() {
                                 children: [
                                     new TableCell({
                                         width: { size: 15, type: WidthType.PERCENTAGE }, borders: cellBorders,
-                                        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ data: imageBuffer, transformation: { width: 65, height: 65 } })] })]
+                                        children: logoCellChildren
                                     }),
                                     new TableCell({
                                         width: { size: 85, type: WidthType.PERCENTAGE }, borders: cellBorders,
                                         children: [
-                                            // RINCIAN 1: Pengaturan bobot teks KOP surat (Normal, Normal, Bold, Miring)
                                             new Paragraph({
                                                 alignment: AlignmentType.CENTER, spacing: { after: 20 },
                                                 children: [
@@ -355,10 +365,9 @@ async function generateWord() {
                         ]
                     }),
 
-                    // RINCIAN 2: Garis/Tabel kosong di bawah kop sudah dihapus total. Langsung jeda spasi bersih paragraf.
                     new Paragraph({ spacing: { before: 180, after: 180 } }),
 
-                    // === RINCIAN 3: JUDUL NOTA DINAS & NOMOR (UPPERCASE, UNDERLINE, CENTER) ===
+                    // === JUDUL NOTA DINAS & NOMOR ===
                     new Paragraph({
                         alignment: AlignmentType.CENTER, spacing: { after: 40 },
                         children: [
@@ -368,11 +377,11 @@ async function generateWord() {
                     new Paragraph({
                         alignment: AlignmentType.CENTER, spacing: { after: 240 },
                         children: [
-                            new TextRun({ text: `Nomor: ND - ${nomorNd}/Q.1.19/Cu.3/${bulanNd}/2026`, bold: false, size: 24 })
+                            new TextRun({ text: `Nomor: ND - ${nomorNd}/Q.1.19/Cu.3/${bulanNd}/${tahunNd}`, bold: false, size: 24 })
                         ]
                     }),
 
-                    // === TABEL METADATA (KEPADA SAMPAI PERIHAL) ===
+                    // === TABEL METADATA ===
                     new Table({
                         width: { size: 100, type: WidthType.PERCENTAGE },
                         rows: [
@@ -381,7 +390,6 @@ async function generateWord() {
                             children: [
                                 new TableCell({ 
                                     width: { size: 15, type: WidthType.PERCENTAGE }, 
-                                    // RINCIAN 4: Terapkan garis bawah tipe double tebal hanya di baris terakhir (Perihal)
                                     borders: (index === arr.length - 1) ? { top: noBorder, bottom: doubleBorderBottom, left: noBorder, right: noBorder } : cellBorders, 
                                     children: [new Paragraph({ children: [new TextRun({ text: item[0] })], spacing: { line: 280 } })] 
                                 }),
@@ -394,10 +402,9 @@ async function generateWord() {
                         }))
                     }),
 
-                    // RINCIAN 2: Tabel kosong di atas isi nota dinas (di atas kata sehubungan) sudah dihapus total.
                     new Paragraph({ spacing: { before: 240 } }),
 
-                    // === RINCIAN 7: ISI PARAGRAF 1 (Before: 0, After: 0, Spasi: 1.5 [360 dxa]) ===
+                    // === ISI PARAGRAF 1 ===
                     new Paragraph({
                         alignment: AlignmentType.JUSTIFY, indent: { firstLine: 720 }, 
                         spacing: { before: 0, after: 0, line: 360 },
@@ -408,7 +415,7 @@ async function generateWord() {
                         ]
                     }),
 
-                    // === ISI PARAGRAF 2 (Before: 0, After: 0, Spasi: 1.5) ===
+                    // === ISI PARAGRAF 2 ===
                     new Paragraph({
                         alignment: AlignmentType.JUSTIFY, indent: { firstLine: 720 }, 
                         spacing: { before: 0, after: 0, line: 360 },
@@ -417,7 +424,7 @@ async function generateWord() {
                         ]
                     }),
 
-                    // === PENUTUP (Before: 0, After: 0, Spasi: 1.5) ===
+                    // === PENUTUP ===
                     new Paragraph({ 
                         indent: { firstLine: 720 }, 
                         spacing: { before: 0, after: 0, line: 360 }, 
@@ -426,7 +433,7 @@ async function generateWord() {
                     
                     new Paragraph({ spacing: { before: 400 } }),
 
-                    // === RINCIAN 5: BLOK TANDA TANGAN (Posisi Pejabat Center di Ujung Kanan Bawah, Kosong 3 Enter) ===
+                    // === BLOK TANDA TANGAN ===
                     new Table({
                         width: { size: 100, type: WidthType.PERCENTAGE },
                         rows: [
@@ -439,7 +446,7 @@ async function generateWord() {
                                             new Paragraph({
                                                 alignment: AlignmentType.CENTER, spacing: { line: 240 },
                                                 children: [
-                                                    new TextRun({ text: `${pjbJabatan}\n\n\n\n`, size: 24 }), // 3 kolom enter ruang kosong
+                                                    new TextRun({ text: `${pjbJabatan}\n\n\n\n`, size: 24 }), 
                                                     new TextRun({ text: `${pjbNama}\n`, bold: true, size: 24 }),
                                                     new TextRun({ text: `${pjbPangkat}`, size: 24 })
                                                 ]
@@ -453,7 +460,7 @@ async function generateWord() {
                     
                     new Paragraph({ spacing: { before: 300 } }),
 
-                    // === RINCIAN 6: TEMBUSAN (Tidak Bold, Numbering, Line Spacing Single [240 dxa]) ===
+                    // === TEMBUSAN ===
                     new Paragraph({
                         spacing: { line: 240, after: 40 },
                         children: [
@@ -461,7 +468,7 @@ async function generateWord() {
                         ]
                     }),
                     ...arrayTembusan.map((t, idx) => new Paragraph({
-                        spacing: { before: 0, after: 0, line: 240 }, // Diatur ketat single spacing
+                        spacing: { before: 0, after: 0, line: 240 }, 
                         indent: { left: 360, hanging: 360 },
                         children: [
                             new TextRun({ text: `${idx + 1}.\t${t}`, size: 22 })
